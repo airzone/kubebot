@@ -1,3 +1,6 @@
 ---
-- include: kubebot-pretasks.yml
-- include: scale.yml
+- name: Add pretasks
+  import_playbook: kubebot-pretasks.yml
+
+- name: run scale.yml
+  import_playbook: scale.yml

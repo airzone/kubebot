@@ -1,5 +1,6 @@
 ---
-- include: kubebot-pretasks.yml
+- name: Add pretasks
+  import_playbook: kubebot-pretasks.yml
 
 - hosts: k8s_cluster
   gather_facts: False
@@ -15,4 +16,5 @@
         - inventory_hostname in nvidia_gpu_nodes
         - kubebot_ansible_distribution == "Ubuntu"
 
-- include: cluster.yml
+- name: run cluster.yml
+  import_playbook: cluster.yml

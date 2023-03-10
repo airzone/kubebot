@@ -1,6 +1,9 @@
 ---
-- include: kube-pretasks.yml
-- include: reset.yml
+- name: Add pretasks
+  import_playbook: kubebot-pretasks.yml
+
+- name: run reset.yml
+  import_playbook: reset.yml
 
 - hosts: etcd:k8s_cluster:calico_rr
   gather_facts: False

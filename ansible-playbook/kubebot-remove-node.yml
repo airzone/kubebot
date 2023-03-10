@@ -1,3 +1,6 @@
 ---
-- include: kubebot-pretasks.yml
-- include: remove-node.yml
+- name: Add pretasks
+  import_playbook: kubebot-pretasks.yml
+
+- name: run remove-node.yml
+  import_playbook: remove-node.yml
