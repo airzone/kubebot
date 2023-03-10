@@ -1,0 +1,12 @@
+---
+- include: kubebot-pretasks.yml
+
+- hosts: kube_control_plane[0]
+  gather_facts: False
+  tasks:
+    - name: Upgrade Kubernetes Cluster | Remove PodDisruptionBudget resources
+      shell: |
+        {{ bin_dir }}/kubectl get pdb -A | grep -v NAMESPACE | awk -F ' ' '{print "kubectl -n "$1" delete pdb "$2}' | sh -s
+      ignore_errors: yes
+
+- include: upgrade-cluster.yml

@@ -1,0 +1,3 @@
+---
+- include: kubebot-pretasks.yml
+- include: remove-node.yml

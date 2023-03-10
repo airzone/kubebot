@@ -1,0 +1,10 @@
+---
+- include: kube-pretasks.yml
+- include: reset.yml
+
+- hosts: etcd:k8s_cluster:calico_rr
+  gather_facts: False
+  any_errors_fatal: false
+  tasks:
+    - name: uninstall kubernetes | reboot
+      reboot:

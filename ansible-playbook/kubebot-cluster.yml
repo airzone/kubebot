@@ -1,0 +1,18 @@
+---
+- include: kubebot-pretasks.yml
+
+- hosts: k8s_cluster
+  gather_facts: False
+  tasks:
+    - name: Install nvidia-docker2 for gpu node (Ubuntu)
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - nvidia-docker2
+      when:
+        - inventory_hostname in nvidia_gpu_nodes
+        - kubebot_ansible_distribution == "Ubuntu"
+
+- include: cluster.yml

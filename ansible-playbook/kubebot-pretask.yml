@@ -1,0 +1,90 @@
+---
+- name: Check ansible version
+  import_playbook: ansible_version.yml
+
+- hosts: bastion[0]
+  gather_facts: False
+  roles:
+    - { role: kubespray-defaults}
+    - { role: bastion-ssh-config, tags: ["localhost", "bastion"]}
+
+- hosts: k8s_cluster
+  gather_facts: False
+  tasks:
+    - name: remove unused files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "/etc/docker/daemon.json"
+
+- hosts: k8s_cluster
+  gather_facts: False
+  tasks:
+    - name: get docker opts
+      set_fact:
+        docker_opts: "{{ lookup('env', 'DOCKER_OPTS')|default('', true) }}"
+    - name: docker opt memlock
+      set_fact:
+        docker_opt_memlock: " --default-ulimit memlock=-1"
+    - name: docker opt nvidia runtime
+      set_fact:
+        docker_opt_nvidia: " --default-runtime nvidia --add-runtime nvidia={{ lookup('env', 'NVIDIA_RUNTIME_PATH')|default('/usr/bin/nvidia-container-runtime', true) }}"
+        # containerd_default_runtime: nvidia
+        # containerd_additional_runtimes:
+        #   - name: nvidia
+        #     type: "io.containerd.kata.v2"
+        #     engine: "{{ lookup('env', 'NVIDIA_RUNTIME_PATH')|default('/usr/bin/nvidia-container-runtime', true) }}"
+        #     root: ""
+      when:
+        - inventory_hostname in nvidia_gpu_nodes
+    - name: set docker options
+      set_fact:
+        docker_options: "{{ docker_opts }}{{ docker_opt_memlock }}{{ docker_opt_nvidia|default('') }}"
+
+- hosts: k8s_cluster
+  tasks:
+    # set paas facts
+    - name: set paas facts
+      set_fact:
+        paas_ansible_distribution: "{{ ansible_distribution }}"
+
+    # support uos
+    - name: set uos to ubuntu
+      set_fact:
+        paas_ansible_distribution: Uos
+        override_system_hostname: false
+        # ansible_os_family: uos | ansible_distribution: Uos
+        #ansible_os_family: Debian
+        #ansible_distribution: Ubuntu
+        #ansible_distribution_release: focal
+        #ansible_docker_version: '20.10'
+      when: paas_ansible_distribution == 'Uos'
+
+    # support openEuler
+    - name: set openEuler to centos
+      set_fact:
+        paas_ansible_distribution: openEuler
+        override_system_hostname: false
+        ansible_os_family: RedHat
+        ansible_distribution: CentOS
+        ansible_distribution_major_version: 8
+      when: paas_ansible_distribution == 'openEuler'
+    # support Huawei Cloud EulerOS
+    - name: set Huawei Cloud EulerOS to centos
+      set_fact:
+        paas_ansible_distribution: 'Huawei Cloud EulerOS'
+        override_system_hostname: false
+        ansible_os_family: RedHat
+        ansible_distribution: CentOS
+        ansible_distribution_major_version: 8
+      when: paas_ansible_distribution == 'Huawei Cloud EulerOS'
+    - name: Fix Huawei Cloud EulerOS vm.panic_on_oom=0
+      sysctl:
+        sysctl_file: "/etc/sysctl.conf"
+        name: vm.panic_on_oom
+        value: 0
+        sysctl_set: yes
+        state: present
+        reload: yes
+      when: paas_ansible_distribution == 'Huawei Cloud EulerOS'

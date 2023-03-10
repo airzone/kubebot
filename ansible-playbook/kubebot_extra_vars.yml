@@ -1,0 +1,118 @@
+
+github_com_mirror: https://ghproxy.com/https://github.com
+storage_googleapis_com_mirror: https://storage.googleapis.com
+kube_image_repo: k8s-gcr-io.mirrors.sjtug.sjtu.edu.cn
+docker_image_repo: docker.mirrors.sjtug.sjtu.edu.cn
+docker_registry_mirrors:
+  - "https://docker.mirrors.sjtug.sjtu.edu.cn"
+
+download_run_once: true
+
+# kube_vip_address: 1.2.3.4
+kube_vip_enabled: "{{ kube_vip_address is defined }}"
+kube_vip_arp_enabled: "{{ kube_vip_enabled }}"
+kube_vip_services_enabled: "{{ kube_vip_enabled }}"
+kube_proxy_strict_arp: "{{ kube_proxy_mode == 'ipvs and kube_vip_arp_enabled'}}"
+loadbalancer_apiserver_vip:
+  address: "{{ kube_vip_address }}"
+  port: "{{ loadbalancer_apiserver_port }}"
+
+# override: group_vars/all/all.yml
+loadbalancer_apiserver_localhost: "{{ not kube_vip_enabled }}"
+loadbalancer_apiserver_type: nginx
+loadbalancer_apiserver: "{{ kube_vip_enabled | ternary(loadbalancer_apiserver_vip, '{}') }}"
+
+# override: group_vars/k8s_cluster/addons.yml
+helm_enabled: true
+metrics_server_container_port: 4443
+metrics_server_kubelet_insecure_tls: true
+metrics_server_metric_resolution: 15s
+metrics_server_kubelet_preferred_address_types: "InternalIP,ExternalIP,Hostname"
+metrics_server_host_network: false
+metrics_server_replicas: 1
+
+ingress_nginx_enabled: true
+ingress_nginx_nodeselector:
+  kubernetes.io/os: "linux"
+ingress_nginx_tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Equal"
+    value: ""
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Equal"
+    value: ""
+    effect: "NoSchedule"
+ingress_nginx_namespace: "ingress-nginx"
+ingress_nginx_insecure_port: 80
+ingress_nginx_secure_port: 443
+ingress_nginx_extra_args:
+  - --default-ssl-certificate=ingress-nginx/default-tls
+ingress_nginx_configmap:
+  hsts: "false"
+  ssl-redirect: "false"
+  use-forwarded-headers: "true"
+  enable-underscores-in-headers: "true"
+  client-header-buffer-size: "512k"
+  large-client-header-buffers: "4 512k"
+
+krew_enabled: true
+
+# override: group_vars/k8s_cluster/k8s-cluster.yml
+kube_network_plugin: "{{ lookup('env', 'KUBE_NETWORK_PLUGIN') | default('calico', true) }}"
+tls_cipher_suites:
+  - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+  - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+  - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+  - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+  - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+  - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+  - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_RSA_WITH_RC4_128_SHA
+  - TLS_RSA_WITH_AES_128_CBC_SHA
+  - TLS_RSA_WITH_AES_128_CBC_SHA256
+  - TLS_RSA_WITH_AES_128_GCM_SHA256
+  - TLS_RSA_WITH_AES_256_CBC_SHA
+  - TLS_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_RSA_WITH_RC4_128_SHA
+
+etcd_tls_cipher_suites:
+  - TLS_RSA_WITH_RC4_128_SHA
+  - TLS_RSA_WITH_AES_128_CBC_SHA
+  - TLS_RSA_WITH_AES_256_CBC_SHA
+  - TLS_RSA_WITH_AES_128_CBC_SHA256
+  - TLS_RSA_WITH_AES_128_GCM_SHA256
+  - TLS_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+  - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+  - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+  - TLS_ECDHE_RSA_WITH_RC4_128_SHA
+  - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+  - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+  - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+  - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+
+kube_apiserver_node_port_range: "30000-42767"
+kube_feature_gates:
+  - RemoveSelfLink=false
+kubelet_config_extra_args:
+  imageGCHighThresholdPercent: 75
+  imageGCLowThresholdPercent: 70
+kube_kubeadm_scheduler_extra_args:
+  port: 10251
+kube_kubeadm_controller_extra_args:
+  port: 10252
