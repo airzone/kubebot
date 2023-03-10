@@ -7,8 +7,8 @@ RUN sed -i \
 
 COPY ansible-playbook/* .
 
-RUN chmod +x entorypint.sh
+RUN chmod +x entrypoint.sh
 
-ENTRYPOINT ["./entorypint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
 
 CMD ["--version"]
