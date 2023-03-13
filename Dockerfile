@@ -2,8 +2,8 @@ FROM quay.io/kubespray/kubespray:v2.21.0
 
 RUN apt-get update && apt-get install -y rsync
 RUN cp inventory/mycluster/group_vars/all/offline.yml inventory/sample/group_vars/all/mirror.yml; \
-    sed -i -E '/# .*\{\{ files_repo/s/^# //g' inventory/sample/group_vars/all/mirror.yml; \
-    tee -a inventory/sample/group_vars/all/mirror.yml <<EOF
+    sed -i -E '/# .*\{\{ files_repo/s/^# //g' inventory/sample/group_vars/all/mirror.yml;
+RUN <<EOF cat >> inventory/sample/group_vars/all/mirror.yml
 gcr_image_repo: "gcr.m.daocloud.io"
 kube_image_repo: "k8s.m.daocloud.io"
 docker_image_repo: "docker.m.daocloud.io"
