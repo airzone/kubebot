@@ -17,14 +17,13 @@ kube_vip_arp_enabled: "{{ kube_vip_enabled }}"
 kube_vip_services_enabled: "{{ kube_vip_enabled }}"
 kube_proxy_strict_arp: "{{ kube_vip_arp_enabled }}"
 kube_vip_controlplane_enabled: "{{ kube_vip_enabled }}"
-loadbalancer_apiserver_vip:
-  address: "{{ kube_vip_address }}"
-  port: "{{ loadbalancer_apiserver_port }}"
 
 # override: group_vars/all/all.yml
 loadbalancer_apiserver_localhost: "{{ not kube_vip_enabled }}"
 loadbalancer_apiserver_type: nginx
-loadbalancer_apiserver: "{{ kube_vip_enabled | ternary(loadbalancer_apiserver_vip, '{}') }}"
+loadbalancer_apiserver:
+  address: "{{ kube_vip_enabled | ternary(kube_vip_address, '127.0.0.1') }}"
+  port: "{{ loadbalancer_apiserver_port }}"
 
 # override: group_vars/k8s_cluster/addons.yml
 helm_enabled: true
@@ -98,15 +97,13 @@ etcd_tls_cipher_suites:
   - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
 
 kube_apiserver_node_port_range: "30000-42767"
-kube_feature_gates:
-  - RemoveSelfLink=false
+#kube_feature_gates:
+#  - RemoveSelfLink=false
 kubelet_config_extra_args:
   imageGCHighThresholdPercent: 75
   imageGCLowThresholdPercent: 70
-kube_kubeadm_scheduler_extra_args:
-  port: 10251
-kube_kubeadm_controller_extra_args:
-  port: 10252
+kube_kubeadm_scheduler_extra_args: {}
+kube_kubeadm_controller_extra_args: {}
 
 nvidia_accelerator_enabled: "{{ nvidia_gpu_nodes | length > 0 }}"
 nvidia_gpu_flavor: "{{ lookup('env', 'NVIDIA_GPU_FLAVOR') | default('tesla', true) }}"
