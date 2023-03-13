@@ -1,8 +1,11 @@
 
-github_com_mirror: https://ghproxy.com/https://github.com
-storage_googleapis_com_mirror: https://storage.googleapis.com
+gcr_image_repo: "gcr.m.daocloud.io"
 kube_image_repo: k8s-gcr-io.mirrors.sjtug.sjtu.edu.cn
 docker_image_repo: docker.mirrors.sjtug.sjtu.edu.cn
+quay_image_repo: quay.io
+github_image_repo: "ghcr.m.daocloud.io"
+files_repo: "https://files.m.daocloud.io"
+
 docker_registry_mirrors:
   - "https://docker.mirrors.sjtug.sjtu.edu.cn"
 
@@ -12,7 +15,8 @@ download_run_once: true
 kube_vip_enabled: "{{ kube_vip_address is defined }}"
 kube_vip_arp_enabled: "{{ kube_vip_enabled }}"
 kube_vip_services_enabled: "{{ kube_vip_enabled }}"
-kube_proxy_strict_arp: "{{ kube_proxy_mode == 'ipvs and kube_vip_arp_enabled'}}"
+kube_proxy_strict_arp: "{{ kube_vip_arp_enabled }}"
+kube_vip_controlplane_enabled: "{{ kube_vip_enabled }}"
 loadbalancer_apiserver_vip:
   address: "{{ kube_vip_address }}"
   port: "{{ loadbalancer_apiserver_port }}"
@@ -62,41 +66,28 @@ krew_enabled: true
 kube_network_plugin: "{{ lookup('env', 'KUBE_NETWORK_PLUGIN') | default('calico', true) }}"
 tls_cipher_suites:
   - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
-  - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
   - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
   - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
   - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
   - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-  - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
   - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-  - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
   - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
   - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
   - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
-  - TLS_ECDHE_RSA_WITH_RC4_128_SHA
   - TLS_RSA_WITH_AES_128_CBC_SHA
-  - TLS_RSA_WITH_AES_128_CBC_SHA256
   - TLS_RSA_WITH_AES_128_GCM_SHA256
   - TLS_RSA_WITH_AES_256_CBC_SHA
   - TLS_RSA_WITH_AES_256_GCM_SHA384
-  - TLS_RSA_WITH_RC4_128_SHA
-
 etcd_tls_cipher_suites:
-  - TLS_RSA_WITH_RC4_128_SHA
   - TLS_RSA_WITH_AES_128_CBC_SHA
   - TLS_RSA_WITH_AES_256_CBC_SHA
-  - TLS_RSA_WITH_AES_128_CBC_SHA256
   - TLS_RSA_WITH_AES_128_GCM_SHA256
   - TLS_RSA_WITH_AES_256_GCM_SHA384
-  - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
   - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
   - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
-  - TLS_ECDHE_RSA_WITH_RC4_128_SHA
   - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
   - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
-  - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
-  - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
   - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
   - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
@@ -116,3 +107,9 @@ kube_kubeadm_scheduler_extra_args:
   port: 10251
 kube_kubeadm_controller_extra_args:
   port: 10252
+
+nvidia_accelerator_enabled: "{{ nvidia_gpu_nodes | length > 0 }}"
+nvidia_gpu_flavor: "{{ lookup('env', 'NVIDIA_GPU_FLAVOR') | default('tesla', true) }}"
+nvidia_driver_install_supported: "{{ lookup('env', 'NVIDIA_GPU_FLAVOR') in ['gtx', 'tesla'] }}"
+nvidia_driver_install_centos_container: "{{ docker_image_repo }}/atzedevries/nvidia-centos-driver-installer:2"
+nvidia_gpu_nodes: "{{ lookup('env', 'NVIDIA_GPU_NODES').split(',') | default([], true) }}"
