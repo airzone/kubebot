@@ -1,13 +1,39 @@
 
-gcr_image_repo: "gcr.m.daocloud.io"
-kube_image_repo: k8s-gcr-io.mirrors.sjtug.sjtu.edu.cn
-docker_image_repo: docker.mirrors.sjtug.sjtu.edu.cn
-quay_image_repo: quay.io
-github_image_repo: "ghcr.m.daocloud.io"
+docker_registry_mirror: "{{ lookup('env', 'DOCKER_REGISTRY_MIRROR') | default('http://docker.mirrors.sjtug.sjtu.edu.cn', true) }}"
+
+gcr_image_repo: "{{ lookup('env', 'GCR_IMAGE_REPO') | default('gcr.m.daocloud.io', true) }}"
+kube_image_repo: "{{ lookup('env', 'KUBE_IMAGE_REPO') | default('k8s-gcr-io.mirrors.sjtug.sjtu.edu.cn', true) | regex_replace('/google_containers', '') }}"
+docker_image_repo: "{{ docker_registry_mirror | default('docker.mirrors.sjtug.sjtu.edu.cn', true) | regex_replace('https://', '') | regex_replace('http://', '') }}"
+quay_image_repo: "{{ lookup('env', 'QUAY_IMAGE_REPO') | default('quay.m.daocloud.io', true) }}"
+github_image_repo: "{{ lookup('env', 'GITHUB_IMAGE_REPO') | default('ghcr.m.daocloud.io', true) }}"
 files_repo: "https://files.m.daocloud.io"
 
+# override: group_vars/all/docker.yml
+docker_daemon_graph: "{{ lookup('env', 'DOCKER_DATA_ROOT') | default('/var/lib/docker', true) }}"
 docker_registry_mirrors:
+  - "{{ docker_registry_mirror }}"
   - "https://docker.mirrors.sjtug.sjtu.edu.cn"
+  - "https://d50f1b73.mirror.aliyuncs.com"
+
+docker_insecure_registries: >-
+  {%- if lookup('env', 'DOCKER_INSECURE_REGISTRIES') | length > 0 -%}
+  {{ [] + lookup('env', 'DOCKER_INSECURE_REGISTRIES').split(',') }}
+  {%- else -%}
+  {{ [] }}
+  {%- endif -%}
+
+# override: group_vars/all/containerd.yml
+containerd_storage_dir: "{{ lookup('env', 'CONTAINERD_DATA_ROOT') | default('/var/lib/containerd', true) }}"
+containerd_registries:
+  "docker.io":
+    - "{{ docker_registry_mirror }}"
+    - "https://d50f1b73.mirror.aliyuncs.com"
+containerd_insecure_registries: >-
+  {%- if lookup('env', 'DOCKER_INSECURE_REGISTRIES') | length > 0 -%}
+  {{ [] + lookup('env', 'DOCKER_INSECURE_REGISTRIES').split(',') }}
+  {%- else -%}
+  {{ [] }}
+  {%- endif -%}
 
 download_run_once: true
 
@@ -21,12 +47,13 @@ kube_vip_controlplane_enabled: "{{ kube_vip_enabled }}"
 # override: group_vars/all/all.yml
 loadbalancer_apiserver_localhost: "{{ not kube_vip_enabled }}"
 loadbalancer_apiserver_type: nginx
-loadbalancer_apiserver:
-  address: "{{ kube_vip_enabled | ternary(kube_vip_address, '127.0.0.1') }}"
-  port: "{{ loadbalancer_apiserver_port }}"
+#loadbalancer_apiserver:
+#  address: "{{ kube_vip_enabled | ternary(kube_vip_address, '127.0.0.1') }}"
+#  port: "{{ loadbalancer_apiserver_port }}"
 
 # override: group_vars/k8s_cluster/addons.yml
 helm_enabled: true
+metrics_server_enabled: true
 metrics_server_container_port: 4443
 metrics_server_kubelet_insecure_tls: true
 metrics_server_metric_resolution: 15s
@@ -63,6 +90,8 @@ krew_enabled: true
 
 # override: group_vars/k8s_cluster/k8s-cluster.yml
 kube_network_plugin: "{{ lookup('env', 'KUBE_NETWORK_PLUGIN') | default('calico', true) }}"
+kube_reserved: true
+auto_renew_certificates: true
 tls_cipher_suites:
   - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
   - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
