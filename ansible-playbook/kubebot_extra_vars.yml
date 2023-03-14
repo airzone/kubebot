@@ -45,7 +45,7 @@ kube_proxy_strict_arp: "{{ kube_vip_arp_enabled }}"
 kube_vip_controlplane_enabled: "{{ kube_vip_enabled }}"
 
 # override: group_vars/all/all.yml
-loadbalancer_apiserver_localhost: "{{ not kube_vip_enabled }}"
+loadbalancer_apiserver_localhost: true
 loadbalancer_apiserver_type: nginx
 #loadbalancer_apiserver:
 #  address: "{{ kube_vip_enabled | ternary(kube_vip_address, '127.0.0.1') }}"
