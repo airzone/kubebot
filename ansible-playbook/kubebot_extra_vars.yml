@@ -38,7 +38,7 @@ containerd_insecure_registries: >-
 download_run_once: true
 
 # kube_vip_address: 1.2.3.4
-kube_vip_enabled: "{{ kube_vip_address is defined }}"
+kube_vip_enabled: "{{ kube_vip_address is defined and kube_vip_address | length > 0}}"
 kube_vip_arp_enabled: "{{ kube_vip_enabled }}"
 kube_vip_services_enabled: "{{ kube_vip_enabled }}"
 kube_proxy_strict_arp: "{{ kube_vip_arp_enabled }}"
@@ -91,6 +91,8 @@ krew_enabled: true
 # override: group_vars/k8s_cluster/k8s-cluster.yml
 kube_network_plugin: "{{ lookup('env', 'KUBE_NETWORK_PLUGIN') | default('calico', true) }}"
 kube_reserved: true
+kube_reserved_cgroups_for_service_slice: kube.slice
+system_reserved: true
 auto_renew_certificates: true
 tls_cipher_suites:
   - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
