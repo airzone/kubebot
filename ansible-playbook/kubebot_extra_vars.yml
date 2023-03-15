@@ -27,6 +27,7 @@ containerd_storage_dir: "{{ lookup('env', 'CONTAINERD_DATA_ROOT') | default('/va
 containerd_registries:
   "docker.io":
     - "{{ docker_registry_mirror }}"
+    - "https://docker.mirrors.sjtug.sjtu.edu.cn"
     - "https://d50f1b73.mirror.aliyuncs.com"
 containerd_insecure_registries: >-
   {%- if lookup('env', 'DOCKER_INSECURE_REGISTRIES') | length > 0 -%}
@@ -38,7 +39,7 @@ containerd_insecure_registries: >-
 download_run_once: true
 
 # kube_vip_address: 1.2.3.4
-kube_vip_enabled: "{{ kube_vip_address is defined and kube_vip_address | length > 0}}"
+kube_vip_enabled: "{{ kube_vip_address | default('', true) | length > 0}}"
 kube_vip_arp_enabled: "{{ kube_vip_enabled }}"
 kube_vip_services_enabled: "{{ kube_vip_enabled }}"
 kube_proxy_strict_arp: "{{ kube_vip_arp_enabled }}"
